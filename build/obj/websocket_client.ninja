@@ -1,0 +1,13 @@
+target_output_name = websocket_client
+
+build ../main.cpp.o: cxx ../main.cpp
+  source_file_part = main.cpp
+  source_name_part = main
+
+build websocket_client: link ../main.cpp.o
+  ldflags = -LC$:/boost_1_87_0/stage/lib
+  libs = -lboost_system-vc143-mt-x64-1_87 -lboost_thread-vc143-mt-x64-1_87
+  frameworks =
+  swiftmodules =
+  output_extension =
+  output_dir =

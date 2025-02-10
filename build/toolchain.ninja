@@ -1,0 +1,6 @@
+rule cxx
+  command = g++ -std=c++17 -I C:/boost_1_87_0 -c ${in} -o ${out}
+rule link
+  command = g++ -std=c++17 -o ${out} ${in} -L C:/boost_1_87_0/stage/lib -lboost_system-vc143-mt-x64-1_87 -lboost_thread-vc143-mt-x64-1_87 -lws2_32
+
+subninja obj/websocket_client.ninja

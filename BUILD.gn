@@ -1,0 +1,19 @@
+# BUILD.gn
+
+executable("websocket_client") {
+    sources = [ "main.cpp" ]
+    include_dirs = [ "C:/boost_1_87_0" ]  # Boost header files
+    lib_dirs = [ "C:/boost_1_87_0/stage/lib" ]  # Boost library files
+    libs = [ "boost_system-vc143-mt-x64-1_87", "boost_thread-vc143-mt-x64-1_87" ]  # Correct Boost libraries
+}
+
+toolchain("default_toolchain") {
+    tool("cxx") {
+        command = "g++ -std=c++17 -I C:/boost_1_87_0 -c {{source}} -o {{output}}"
+        outputs = [ "{{source}}.o" ]
+    }
+    tool("link") {
+        command = "g++ -std=c++17 -o {{output}} {{inputs}} -L C:/boost_1_87_0/stage/lib -lboost_system-vc143-mt-x64-1_87 -lboost_thread-vc143-mt-x64-1_87 -lws2_32"
+        outputs = [ "{{target_output_name}}" ]
+    }
+}

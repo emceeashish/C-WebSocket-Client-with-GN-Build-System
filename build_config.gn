@@ -1,0 +1,3 @@
+# build_config.gn
+
+set_default_toolchain("//:default_toolchain")
