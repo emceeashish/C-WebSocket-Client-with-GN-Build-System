@@ -43,7 +43,7 @@ public:
         messages_.pop();
         return response;
     }
-
+// Gracefully close the connection and join the thread
     void close() {
         if (ws_.is_open()) {
             ws_.close(websocket::close_code::normal);
