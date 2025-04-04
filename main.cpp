@@ -85,7 +85,7 @@ private:
     std::queue<std::pair<std::string, bool>> messages_; // {message, isText}
     std::thread receiver_thread_;
 };
-
+// Handles user input and displays responses
 void chatSession(WebSocketClient& client) {
     // Process initial server message (welcome banner)
     try {
