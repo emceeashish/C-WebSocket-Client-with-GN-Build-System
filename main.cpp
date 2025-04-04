@@ -35,7 +35,7 @@ public:
         ws_.binary(true); // Enable binary mode
         ws_.write(net::buffer(data));
     }
-
+// This function is called by the main thread to wait for server responses
     std::pair<std::string, bool> getResponse() {
         std::unique_lock<std::mutex> lock(mutex_);
         cv_.wait(lock, [this] { return !messages_.empty(); });
