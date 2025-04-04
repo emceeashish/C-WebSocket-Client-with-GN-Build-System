@@ -54,6 +54,7 @@ public:
     }
 
 private:
+// Continuously run in background to receive messages from server
     void receiveContinuous() {
         try {
             while (ws_.is_open()) {
