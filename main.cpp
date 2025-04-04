@@ -17,7 +17,7 @@ class WebSocketClient {
 public:
     WebSocketClient(net::io_context& ioc, const std::string& host, const std::string& port)
         : resolver_(ioc), ws_(ioc), host_(host), port_(port) {}
-
+  // Connect to the server and start receiving thread
     void connect() {
         auto const results = resolver_.resolve(host_, port_);
         net::connect(ws_.next_layer(), results.begin(), results.end());
