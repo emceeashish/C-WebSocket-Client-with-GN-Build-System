@@ -112,7 +112,7 @@ void chatSession(WebSocketClient& client) {
             std::vector<uint8_t> binaryData(input.begin(), input.end());
             client.sendBinary(binaryData);
         }
-
+// Wait for and print server response
         auto response = client.getResponse();
         if (response.second) {
             std::cout << "Server (Text): " << response.first << "\n";
