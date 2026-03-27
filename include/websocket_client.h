@@ -28,6 +28,11 @@
 #include <thread>
 #include <vector>
 
+// x86 intrinsics for _mm_pause() spin-wait hint
+#if defined(__x86_64__) || defined(_M_X64) || defined(__i386__) || defined(_M_IX86)
+    #include <immintrin.h>
+#endif
+
 #include "memory_pool.h"
 #include "message.h"
 #include "spsc_queue.h"
@@ -232,11 +237,8 @@ private:
                     msg = Message(
                         beast::buffers_to_string(read_buffer.data()), true);
                 } else {
-                    auto* data_ptr = static_cast<const uint8_t*>(
-                        read_buffer.data().data());
-                    std::string binary_str(
-                        data_ptr, data_ptr + read_buffer.size());
-                    msg = Message(std::move(binary_str), false);
+                    msg = Message(
+                        beast::buffers_to_string(read_buffer.data()), false);
                 }
 
                 // Lock-free enqueue — no mutex, no syscall

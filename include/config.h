@@ -10,7 +10,13 @@
 #include <chrono>
 #include <cstddef>
 #include <cstdint>
+#include <thread>
 #include <type_traits>
+
+// x86 intrinsics for _mm_pause() spin-wait hint
+#if defined(__x86_64__) || defined(_M_X64) || defined(__i386__) || defined(_M_IX86)
+    #include <immintrin.h>
+#endif
 
 namespace ws {
 namespace config {
