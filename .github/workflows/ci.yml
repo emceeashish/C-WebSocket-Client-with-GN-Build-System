@@ -1,0 +1,98 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  build-linux:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libboost-all-dev
+
+    - name: Compile main client
+      run: |
+        g++ -std=c++17 -O2 -Wall -Wextra -Wpedantic \
+          -I include \
+          src/main.cpp \
+          -lboost_system -lboost_thread -lpthread \
+          -o websocket_client
+
+    - name: Compile benchmark suite
+      run: |
+        g++ -std=c++17 -O2 -Wall -Wextra -Wpedantic \
+          -I include \
+          benchmarks/benchmark_client.cpp \
+          -lboost_system -lboost_thread -lpthread \
+          -o benchmark_client
+
+    - name: Compile and run SPSC queue tests
+      run: |
+        g++ -std=c++17 -O2 -Wall -Wextra -Wpedantic \
+          -I include \
+          tests/test_spsc_queue.cpp \
+          -lpthread \
+          -o test_spsc_queue
+        ./test_spsc_queue
+
+    - name: Compile and run memory pool tests
+      run: |
+        g++ -std=c++17 -O2 -Wall -Wextra -Wpedantic \
+          -I include \
+          tests/test_memory_pool.cpp \
+          -o test_memory_pool
+        ./test_memory_pool
+
+    - name: Compile and run latency stats tests
+      run: |
+        g++ -std=c++17 -O2 -Wall -Wextra -Wpedantic \
+          -I include \
+          tests/test_latency_stats.cpp \
+          -o test_latency_stats
+        ./test_latency_stats
+
+  build-windows:
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Install Boost
+      run: |
+        choco install boost-msvc-14.3 --version=1.87.0 -y
+      shell: powershell
+
+    - name: Compile and run SPSC queue tests
+      run: |
+        g++ -std=c++17 -O2 -Wall -Wextra `
+          -I include `
+          tests/test_spsc_queue.cpp `
+          -o test_spsc_queue.exe
+        ./test_spsc_queue.exe
+      shell: powershell
+
+    - name: Compile and run memory pool tests
+      run: |
+        g++ -std=c++17 -O2 -Wall -Wextra `
+          -I include `
+          tests/test_memory_pool.cpp `
+          -o test_memory_pool.exe
+        ./test_memory_pool.exe
+      shell: powershell
+
+    - name: Compile and run latency stats tests
+      run: |
+        g++ -std=c++17 -O2 -Wall -Wextra `
+          -I include `
+          tests/test_latency_stats.cpp `
+          -o test_latency_stats.exe
+        ./test_latency_stats.exe
+      shell: powershell

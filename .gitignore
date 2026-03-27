@@ -1,0 +1,28 @@
+# .gitignore
+
+# Build outputs
+out/
+build/
+*.o
+*.obj
+*.exe
+*.pdb
+*.ilk
+
+# IDE files
+.vscode/
+.vs/
+*.suo
+*.user
+*.sln
+*.vcxproj*
+.idea/
+*.swp
+*~
+
+# OS files
+Thumbs.db
+.DS_Store
+
+# Compiled object files (should never be committed)
+main.cpp.o

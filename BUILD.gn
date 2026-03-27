@@ -1,19 +1,97 @@
-# BUILD.gn
+# BUILD.gn — Low Latency WebSocket Client
+#
+# Build instructions:
+#   gn gen out/Default
+#   ninja -C out/Default
+#
+# Override Boost path:
+#   gn gen out/Default --args='boost_root="D:/my_boost"'
+
+declare_args() {
+    boost_root = "C:/boost_1_87_0"
+}
+
+# ─── Main Client ─────────────────────────────────────────
 
 executable("websocket_client") {
-    sources = [ "main.cpp" ]
-    include_dirs = [ "C:/boost_1_87_0" ]  # Boost header files
-    lib_dirs = [ "C:/boost_1_87_0/stage/lib" ]  # Boost library files
-    libs = [ "boost_system-vc143-mt-x64-1_87", "boost_thread-vc143-mt-x64-1_87" ]  # Correct Boost libraries
+    sources = [ "src/main.cpp" ]
+
+    include_dirs = [
+        "include",
+        "$boost_root",
+    ]
+
+    lib_dirs = [ "$boost_root/stage/lib" ]
+
+    libs = [
+        "boost_system-vc143-mt-x64-1_87",
+        "boost_thread-vc143-mt-x64-1_87",
+    ]
+
+    cflags_cc = [
+        "-std=c++17",
+        "-O2",
+        "-Wall",
+        "-Wextra",
+        "-Wpedantic",
+    ]
 }
+
+# ─── Benchmark Suite ─────────────────────────────────────
+
+executable("benchmark_client") {
+    sources = [ "benchmarks/benchmark_client.cpp" ]
+
+    include_dirs = [
+        "include",
+        "$boost_root",
+    ]
+
+    lib_dirs = [ "$boost_root/stage/lib" ]
+
+    libs = [
+        "boost_system-vc143-mt-x64-1_87",
+        "boost_thread-vc143-mt-x64-1_87",
+    ]
+
+    cflags_cc = [
+        "-std=c++17",
+        "-O2",
+        "-Wall",
+        "-Wextra",
+    ]
+}
+
+# ─── Unit Tests ──────────────────────────────────────────
+
+executable("test_spsc_queue") {
+    sources = [ "tests/test_spsc_queue.cpp" ]
+    include_dirs = [ "include" ]
+    cflags_cc = [ "-std=c++17", "-O2", "-Wall", "-Wextra" ]
+}
+
+executable("test_memory_pool") {
+    sources = [ "tests/test_memory_pool.cpp" ]
+    include_dirs = [ "include" ]
+    cflags_cc = [ "-std=c++17", "-O2", "-Wall", "-Wextra" ]
+}
+
+executable("test_latency_stats") {
+    sources = [ "tests/test_latency_stats.cpp" ]
+    include_dirs = [ "include" ]
+    cflags_cc = [ "-std=c++17", "-O2", "-Wall", "-Wextra" ]
+}
+
+# ─── Toolchain ───────────────────────────────────────────
 
 toolchain("default_toolchain") {
     tool("cxx") {
-        command = "g++ -std=c++17 -I C:/boost_1_87_0 -c {{source}} -o {{output}}"
-        outputs = [ "{{source}}.o" ]
+        command = "g++ -std=c++17 -O2 -Wall -Wextra -I $boost_root -I include -c {{source}} -o {{output}}"
+        outputs = [ "{{source_name_part}}.o" ]
     }
+
     tool("link") {
-        command = "g++ -std=c++17 -o {{output}} {{inputs}} -L C:/boost_1_87_0/stage/lib -lboost_system-vc143-mt-x64-1_87 -lboost_thread-vc143-mt-x64-1_87 -lws2_32"
+        command = "g++ -O2 -o {{output}} {{inputs}} -L $boost_root/stage/lib -lboost_system-vc143-mt-x64-1_87 -lboost_thread-vc143-mt-x64-1_87 -lws2_32"
         outputs = [ "{{target_output_name}}" ]
     }
 }
