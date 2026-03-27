@@ -157,18 +157,3 @@ The dedicated benchmark (`benchmarks/benchmark_client.cpp`) runs 4 scenarios:
 GitHub Actions runs on every push and PR:
 - **Linux** (ubuntu-latest): full build + all tests
 - **Windows** (windows-latest): unit tests
-
-## Low Latency Techniques
-
-1. **Lock-free SPSC ring buffer** — no mutex, no condition variable
-2. **Cache-line alignment** — `alignas(64)` prevents false sharing
-3. **`TCP_NODELAY`** — data sent immediately, no Nagle batching
-4. **Spin-wait + `_mm_pause()`** — no OS scheduler involvement
-5. **Pre-allocated storage** — SPSC array, flat_buffer reuse, vector reserve
-6. **Acquire-release ordering** — minimal fence overhead
-7. **CPU affinity** — receiver pinned to core, L1/L2 stays warm
-8. **Thread priority** — `THREAD_PRIORITY_HIGHEST` on Windows
-9. **Memory pool** — O(1) free-list, zero heap fragmentation
-10. **Socket buffer tuning** — configurable send/receive sizes
-11. **`constexpr` config** — all tunables resolved at compile time
-12. **Template policies** — zero-cost wait strategy selection
