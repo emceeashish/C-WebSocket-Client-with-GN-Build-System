@@ -1,15 +1,7 @@
 #pragma once
 
-/// @file latency_stats.h
-/// @brief High-resolution latency measurement and statistics.
-///
-/// Captures per-message round-trip times and computes distribution
-/// statistics: min, max, mean, median, p95, p99, p99.9.
-///
-/// Design decisions:
-///   - Uses steady_clock for monotonic, high-resolution timing
-///   - Stores all samples for accurate percentile computation
-///   - Pre-reserves sample vector to avoid reallocation on hot path
+// High-resolution latency measurement with percentile statistics.
+// Pre-reserves sample storage to avoid reallocation on the hot path.
 
 #include <algorithm>
 #include <chrono>
@@ -24,55 +16,44 @@
 
 namespace ws {
 
-/// @brief High-resolution clock wrapper for latency measurement.
-/// Uses std::chrono::steady_clock for monotonic timing.
 class LatencyStats {
 public:
     using Clock     = std::chrono::steady_clock;
     using TimePoint = Clock::time_point;
     using Duration  = std::chrono::nanoseconds;
 
-    /// @brief Construct with pre-allocated sample storage.
-    /// @param reserve_size Number of samples to pre-allocate (avoids hot-path realloc)
     explicit LatencyStats(std::size_t reserve_size = 10000) {
         samples_ns_.reserve(reserve_size);
     }
 
-    /// @brief Capture a timestamp (call before send).
     [[nodiscard]] static TimePoint now() noexcept {
         return Clock::now();
     }
 
-    /// @brief Record a latency sample from start to now.
     void record(TimePoint start) {
         auto end = Clock::now();
         auto ns = std::chrono::duration_cast<Duration>(end - start).count();
         samples_ns_.push_back(ns);
     }
 
-    /// @brief Record a pre-computed latency in nanoseconds.
     void record_ns(int64_t nanoseconds) {
         samples_ns_.push_back(nanoseconds);
     }
 
-    /// @brief Get number of recorded samples.
     [[nodiscard]] std::size_t count() const noexcept {
         return samples_ns_.size();
     }
 
-    /// @brief Reset all recorded samples.
     void reset() {
         samples_ns_.clear();
     }
 
-    /// @brief Compute and print latency distribution to stdout.
     void print_report(const std::string& label = "Latency Report") const {
         if (samples_ns_.empty()) {
             std::cout << "[" << label << "] No samples recorded.\n";
             return;
         }
 
-        // Sort a copy for percentile computation
         auto sorted = samples_ns_;
         std::sort(sorted.begin(), sorted.end());
 
@@ -87,7 +68,6 @@ public:
         const double p99_us  = percentile(sorted, 99.0) / 1000.0;
         const double p999_us = percentile(sorted, 99.9) / 1000.0;
 
-        // Compute standard deviation
         double sq_sum = 0.0;
         for (auto s : sorted) {
             double diff = (s / 1000.0) - mean_us;
@@ -113,13 +93,11 @@ public:
         std::cout << "\n";
     }
 
-    /// @brief Get raw samples (for external analysis / export).
     [[nodiscard]] const std::vector<int64_t>& samples() const noexcept {
         return samples_ns_;
     }
 
 private:
-    /// @brief Compute a percentile from sorted data.
     static double percentile(const std::vector<int64_t>& sorted, double pct) {
         if (sorted.empty()) return 0.0;
         double rank = (pct / 100.0) * static_cast<double>(sorted.size() - 1);
@@ -131,7 +109,7 @@ private:
                static_cast<double>(sorted[upper]) * frac;
     }
 
-    std::vector<int64_t> samples_ns_;  ///< All recorded latencies in nanoseconds
+    std::vector<int64_t> samples_ns_;
 };
 
 }  // namespace ws

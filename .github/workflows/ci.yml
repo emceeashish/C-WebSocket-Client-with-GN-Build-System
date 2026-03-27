@@ -16,7 +16,7 @@ jobs:
     - name: Install dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y libboost-all-dev
+        sudo apt-get install -y libboost-all-dev libssl-dev
 
     - name: Compile main client
       run: |
@@ -25,6 +25,15 @@ jobs:
           src/main.cpp \
           -lboost_system -lboost_thread -lpthread \
           -o websocket_client
+
+    - name: Compile main client (with TLS/SSL)
+      run: |
+        g++ -std=c++17 -O2 -Wall -Wextra -Wpedantic \
+          -DWS_ENABLE_SSL \
+          -I include \
+          src/main.cpp \
+          -lboost_system -lboost_thread -lssl -lcrypto -lpthread \
+          -o websocket_client_ssl
 
     - name: Compile benchmark suite
       run: |

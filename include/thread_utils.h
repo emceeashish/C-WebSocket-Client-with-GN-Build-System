@@ -1,15 +1,7 @@
 #pragma once
 
-/// @file thread_utils.h
-/// @brief CPU affinity and thread pinning utilities.
-///
-/// In low latency systems, pinning threads to specific CPU cores
-/// eliminates context-switch jitter and improves cache locality.
-///
-/// Design decisions:
-///   - Platform-specific implementations (Windows + Linux)
-///   - Best-effort: returns success/failure, never throws
-///   - Thread naming for debugger visibility (Linux: prctl, Windows: SetThreadDescription)
+// CPU affinity and thread pinning utilities.
+// Pinning threads = no core migration = warm L1/L2 = lower tail latency.
 
 #include <cstdint>
 #include <iostream>
@@ -29,15 +21,6 @@
 
 namespace ws {
 
-/// @brief Pin the calling thread to a specific CPU core.
-/// @param core_id Zero-based CPU core index.
-/// @return true if pinning succeeded, false otherwise.
-///
-/// Why pin threads?
-///   - Eliminates OS scheduler migrations between cores
-///   - Keeps the L1/L2 cache warm for this thread's data
-///   - Reduces tail latency caused by cache-cold restarts
-///   - Critical for achieving consistent sub-microsecond latency
 inline bool pin_thread_to_core(int core_id) noexcept {
 #ifdef _WIN32
     DWORD_PTR mask = static_cast<DWORD_PTR>(1) << core_id;
@@ -49,7 +32,7 @@ inline bool pin_thread_to_core(int core_id) noexcept {
         return false;
     }
 
-    // Also set high priority to reduce scheduling latency
+    // Reduce scheduling latency
     if (!SetThreadPriority(thread, THREAD_PRIORITY_HIGHEST)) {
         std::cerr << "[thread] Warning: could not set high priority\n";
     }
@@ -71,11 +54,9 @@ inline bool pin_thread_to_core(int core_id) noexcept {
 #endif
 }
 
-/// @brief Set the name of the calling thread (visible in debuggers/profilers).
-/// @param name Thread name (max 15 chars on Linux).
 inline void set_thread_name(const std::string& name) noexcept {
 #ifdef _WIN32
-    // Windows 10 1607+ thread naming
+    // Windows 10 1607+ thread naming via SetThreadDescription
     std::wstring wname(name.begin(), name.end());
     using SetThreadDescriptionFn = HRESULT(WINAPI*)(HANDLE, PCWSTR);
 
@@ -95,24 +76,14 @@ inline void set_thread_name(const std::string& name) noexcept {
 #endif
 }
 
-/// @brief Query the number of available CPU cores.
-/// @return Number of hardware threads, or 1 if detection fails.
 inline unsigned int get_cpu_count() noexcept {
     unsigned int count = std::thread::hardware_concurrency();
     return count > 0 ? count : 1;
 }
 
-/// @brief RAII thread pinner — pins on construction, logs on failure.
-///
-/// Usage:
-///   void my_thread_func() {
-///       ThreadPinner pinner(2, "receiver");
-///       // ... thread is now pinned to core 2
-///   }
+// RAII thread pinner — pins on construction, logs result
 class ThreadPinner {
 public:
-    /// @param core_id CPU core to pin to
-    /// @param name Optional thread name for debugger
     explicit ThreadPinner(int core_id, const std::string& name = "")
         : core_id_(core_id), pinned_(false)
     {

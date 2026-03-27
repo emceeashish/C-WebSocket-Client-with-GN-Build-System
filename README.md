@@ -27,6 +27,7 @@ A high performance WebSocket client engineered for low latency communication. Fe
 ```
 ├── include/
 │   ├── websocket_client.h      # Client — Beast + SPSC + thread pinning
+│   ├── secure_websocket_client.h # TLS/SSL client (wss://)
 │   ├── spsc_queue.h            # Lock-free SPSC ring buffer
 │   ├── latency_stats.h         # RTT + percentile statistics
 │   ├── memory_pool.h           # Fixed-block O(1) free-list allocator
@@ -63,6 +64,7 @@ A high performance WebSocket client engineered for low latency communication. Fe
 | **Exponential backoff** | Production reconnect: 100ms → 200ms → ... → 30s |
 | **Template wait policies** | Compile-time swap: spin / yield / sleep (zero cost) |
 | **`constexpr` configuration** | All tunables resolved at compile time |
+| **TLS/SSL support** | Optional `wss://` via Boost.Beast SSL, TLSv1.2+, SNI, system CA |
 
 ## Build
 
@@ -75,6 +77,11 @@ ninja -C out/Default
 g++ -std=c++17 -O2 -Wall -Wextra -I include \
     src/main.cpp -lboost_system -lboost_thread -lpthread \
     -o websocket_client
+
+# Build with TLS/SSL support (requires OpenSSL)
+g++ -std=c++17 -O2 -Wall -Wextra -DWS_ENABLE_SSL -I include \
+    src/main.cpp -lboost_system -lboost_thread -lssl -lcrypto -lpthread \
+    -o websocket_client_ssl
 ```
 
 ## Usage
@@ -85,6 +92,9 @@ g++ -std=c++17 -O2 -Wall -Wextra -I include \
 
 # Custom server with thread pinning + auto-reconnect
 ./websocket_client --host localhost --port 8765 --pin 3 --reconnect
+
+# Secure WebSocket (TLS) — requires SSL build
+./websocket_client_ssl --ssl --host echo.websocket.events
 
 # Run benchmark suite
 ./benchmark_client
@@ -99,7 +109,8 @@ g++ -std=c++17 -O2 -Wall -Wextra -I include \
 | Flag | Description |
 |---|---|
 | `--host HOST` | Server hostname (default: echo.websocket.events) |
-| `--port PORT` | Server port (default: 80) |
+| `--port PORT` | Server port (default: 80, 443 with --ssl) |
+| `--ssl` | Use TLS/SSL secure connection (wss://) |
 | `--pin [CORE]` | Pin receiver thread to CPU core |
 | `--reconnect` | Enable auto-reconnect on disconnect |
 | `-h, --help` | Show help |
